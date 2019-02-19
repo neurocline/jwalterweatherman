@@ -99,7 +99,7 @@ func NewNotepad(
 	n.LOG = log.New(n.logHandle,
 		"LOG:   ",
 		n.flags)
-	n.FEEDBACK = &Feedback{out: log.New(outHandle, "", 0), log: n.LOG}
+	n.FEEDBACK = &Feedback{out: log.New(outHandle, "", 0), log: n.LOG, enabled: true}
 
 	n.init()
 	return n
@@ -196,26 +196,47 @@ func (n *Notepad) SetFlags(flags int) {
 	n.init()
 }
 
+// EnableDisableFeedback enables/disables the FEEDBACK logger.
+// This is persistent; the FEEDBACK logger stays enabled or disabled
+// until another call to EnableDisableFeedback changes the status.
+// This allows the calling application to implement options like --quiet.
+func (n *Notepad) EnableDisableFeedback(enable bool) {
+	n.FEEDBACK.enabled = enable
+}
+
 // Feedback writes plainly to the outHandle while
 // logging with the standard extra information (date, file, etc).
 type Feedback struct {
-	out *log.Logger
-	log *log.Logger
+	out     *log.Logger
+	log     *log.Logger
+	enabled bool
 }
 
 func (fb *Feedback) Println(v ...interface{}) {
+	if !fb.enabled {
+		return
+	}
 	fb.output(fmt.Sprintln(v...))
 }
 
 func (fb *Feedback) Printf(format string, v ...interface{}) {
+	if !fb.enabled {
+		return
+	}
 	fb.output(fmt.Sprintf(format, v...))
 }
 
 func (fb *Feedback) Print(v ...interface{}) {
+	if !fb.enabled {
+		return
+	}
 	fb.output(fmt.Sprint(v...))
 }
 
 func (fb *Feedback) output(s string) {
+	if !fb.enabled {
+		return
+	}
 	if fb.out != nil {
 		fb.out.Output(2, s)
 	}

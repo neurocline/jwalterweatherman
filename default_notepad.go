@@ -21,8 +21,9 @@ var (
 	CRITICAL *log.Logger
 	FATAL    *log.Logger
 
-	LOG      *log.Logger
-	FEEDBACK *Feedback
+	LOG        *log.Logger
+	FEEDBACK   *Feedback
+	noFeedback bool
 
 	defaultNotepad *Notepad
 )
@@ -100,12 +101,21 @@ func StdoutThreshold() Threshold {
 	return defaultNotepad.stdoutThreshold
 }
 
-// GetStdoutThreshold returns the defined Treshold for the log logger.
+// GetStdoutThreshold returns the defined Threshold for the log logger.
 func GetLogThreshold() Threshold {
 	return defaultNotepad.GetLogThreshold()
 }
 
-// GetStdoutThreshold returns the Treshold for the stdout logger.
+// GetStdoutThreshold returns the Threshold for the stdout logger.
 func GetStdoutThreshold() Threshold {
 	return defaultNotepad.GetStdoutThreshold()
+}
+
+// EnableDisableFeedback enables/disables the FEEDBACK logger.
+// This is persistent; the FEEDBACK logger stays enabled or disabled
+// until another call to EnableDisableFeedback changes the status.
+// This allows the calling application to implement options like --quiet.
+func EnableDisableFeedback(enable bool) {
+	noFeedback = !enable
+	reloadDefaultNotepad()
 }
